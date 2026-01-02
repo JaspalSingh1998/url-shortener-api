@@ -9,11 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/JaspalSingh1998/url-shortener-api/internal/config"
-	"github.com/JaspalSingh1998/url-shortener-api/internal/routes"
-	"github.com/JaspalSingh1998/url-shortener-api/internal/server"
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	"github.com/JaspalSingh1998/url-shortener-api/internal/app"
+	"github.com/JaspalSingh1998/url-shortener-api/internal/config"
 )
 
 func main() {
@@ -21,18 +20,14 @@ func main() {
 
 	cfg := config.Load()
 
-	gin.SetMode(gin.ReleaseMode)
+	// Build application (DI + router + server)
+	srv, cleanup, err := app.Build(cfg)
+	if err != nil {
+		log.Fatalf("failed to build app: %v", err)
+	}
+	defer cleanup()
 
-	router := gin.New()
-
-	router.Use(gin.Logger(), gin.Recovery())
-
-	routes.Register(router)
-
-	srv := server.New(router, cfg.ServerPort)
-
-	// Run Server in goroutine
-
+	// Run server in goroutine
 	go func() {
 		log.Printf("Server started on :%s", cfg.ServerPort)
 		if err := srv.Start(); err != nil && err != http.ErrServerClosed {
@@ -40,22 +35,18 @@ func main() {
 		}
 	}()
 
-	// Listen for shutdown signals
-
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
-
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	log.Println("Shutdown signal received")
 
-	// Context with timeout for graceful shutdown
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		log.Fatalf("server forced to shutdown: %v", err)
 	}
 
 	log.Println("Server exited gracefully")
