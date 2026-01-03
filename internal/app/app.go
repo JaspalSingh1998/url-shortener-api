@@ -41,11 +41,15 @@ func Build(cfg *config.Config) (*server.Server, func(), error) {
 	linkService := service.NewLinkService(linkStore, linkCache)
 	linkHandler := handler.NewLinkHandler(linkService, clickService, cfg.BaseURL)
 
+	analyticsStore := store.NewAnalyticsStore(db)
+	analyticsService := service.NewAnalyticsService(analyticsStore)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
+
 	// Router
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 
-	routes.Register(router, linkHandler)
+	routes.Register(router, linkHandler, analyticsHandler)
 
 	// Server
 	srv := server.New(router, cfg.ServerPort)

@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, linkHandler *handler.LinkHandler) {
+func Register(router *gin.Engine, linkHandler *handler.LinkHandler, analyticsHandler *handler.AnalyticsHandler) {
 
 	// Public redirect (NO /v1)
 	router.GET("/:shortCode", linkHandler.Redirect)
@@ -13,6 +13,8 @@ func Register(router *gin.Engine, linkHandler *handler.LinkHandler) {
 	v1 := router.Group("/v1")
 	{
 		v1.POST("/links", linkHandler.Create)
+		v1.GET("/links/:id/analytics/daily", analyticsHandler.Daily)
+		v1.GET("/links/:id/analytics/hourly", analyticsHandler.Hourly)
 	}
 
 	router.GET("/health", func(ctx *gin.Context) {
