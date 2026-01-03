@@ -5,7 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 
+	"github.com/JaspalSingh1998/url-shortener-api/internal/cache"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/config"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/handler"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/routes"
@@ -21,9 +23,17 @@ func Build(cfg *config.Config) (*server.Server, func(), error) {
 		return nil, nil, err
 	}
 
+	// Redis
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisAddr,
+	})
+
+	linkCache := cache.NewRedisLinkCache(redisClient)
+
 	// Dependencies
 	linkStore := store.NewLinkStore(db)
-	linkService := service.NewLinkService(linkStore)
+	linkService := service.NewLinkService(linkStore, linkCache)
 	linkHandler := handler.NewLinkHandler(linkService, cfg.BaseURL)
 
 	// Router
