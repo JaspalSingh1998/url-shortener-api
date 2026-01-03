@@ -31,10 +31,15 @@ func Build(cfg *config.Config) (*server.Server, func(), error) {
 
 	linkCache := cache.NewRedisLinkCache(redisClient)
 
+	// Click
+
+	clickStore := store.NewClickStore(db)
+	clickService := service.NewClickService(clickStore)
+
 	// Dependencies
 	linkStore := store.NewLinkStore(db)
 	linkService := service.NewLinkService(linkStore, linkCache)
-	linkHandler := handler.NewLinkHandler(linkService, cfg.BaseURL)
+	linkHandler := handler.NewLinkHandler(linkService, clickService, cfg.BaseURL)
 
 	// Router
 	router := gin.New()

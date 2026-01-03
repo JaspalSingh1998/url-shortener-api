@@ -1,21 +1,29 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/JaspalSingh1998/url-shortener-api/internal/model"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type LinkHandler struct {
-	service *service.LinkService
-	baseURL string
+	service      *service.LinkService
+	clickService *service.ClickService
+	baseURL      string
 }
 
-func NewLinkHandler(service *service.LinkService, baseURL string) *LinkHandler {
+func NewLinkHandler(
+	linkService *service.LinkService,
+	clickService *service.ClickService,
+	baseURL string,
+) *LinkHandler {
 	return &LinkHandler{
-		service: service,
-		baseURL: baseURL,
+		service:      linkService,
+		clickService: clickService,
+		baseURL:      baseURL,
 	}
 }
 
@@ -69,5 +77,20 @@ func (h *LinkHandler) Redirect(c *gin.Context) {
 		return
 	}
 
+	// Async Click tracking
+	go h.trackClick(c, link)
+
 	c.Redirect(http.StatusFound, link.OriginalURL)
+}
+
+func (h *LinkHandler) trackClick(c *gin.Context, link *model.Link) {
+	e := &model.ClickEvent{
+		LinkID:    link.ID,
+		ShortCode: link.ShortCode,
+		IPAddress: c.ClientIP(),
+		UserAgent: c.GetHeader("User-Agent"),
+		Referrer:  c.GetHeader("Referer"),
+	}
+
+	h.clickService.Track(context.Background(), e)
 }
