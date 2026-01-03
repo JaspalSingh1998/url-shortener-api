@@ -7,6 +7,9 @@ import (
 
 func Register(router *gin.Engine, linkHandler *handler.LinkHandler) {
 
+	// Public redirect (NO /v1)
+	router.GET("/:shortCode", linkHandler.Redirect)
+
 	v1 := router.Group("/v1")
 	{
 		v1.POST("/links", linkHandler.Create)

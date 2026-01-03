@@ -56,3 +56,18 @@ func (h *LinkHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": resp})
 
 }
+
+func (h *LinkHandler) Redirect(c *gin.Context) {
+	shortCode := c.Param("shortCode")
+
+	link, err := h.service.ResolveLink(c.Request.Context(), shortCode)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "link not found or expired",
+		})
+		return
+	}
+
+	c.Redirect(http.StatusFound, link.OriginalURL)
+}

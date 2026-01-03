@@ -33,3 +33,28 @@ func (s *LinkStore) Create(ctx context.Context, link *model.Link) error {
 		&link.UpdatedAt,
 	)
 }
+
+func (s *LinkStore) GetByShortCode(ctx context.Context, shortCode string) (*model.Link, error) {
+	query := `SELECT id, short_code, original_url, expires_at, is_active 
+	FROM links
+	WHERE short_code = $1
+	AND is_active = true
+	AND (expires_at IS NULL OR expires_at > NOW())
+	`
+
+	var link model.Link
+
+	err := s.db.QueryRow(ctx, query, shortCode).Scan(
+		&link.ID,
+		&link.ShortCode,
+		&link.OriginalURL,
+		&link.ExpiresAt,
+		&link.IsActive,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &link, nil
+}
