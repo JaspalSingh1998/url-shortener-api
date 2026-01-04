@@ -10,6 +10,7 @@ import (
 	"github.com/JaspalSingh1998/url-shortener-api/internal/cache"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/config"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/handler"
+	"github.com/JaspalSingh1998/url-shortener-api/internal/middleware"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/routes"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/server"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/service"
@@ -17,6 +18,11 @@ import (
 )
 
 func Build(cfg *config.Config) (*server.Server, func(), error) {
+	publicKey, err := config.LoadRSAPublicKey(cfg.JWTPublicKeyPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// DB
 	db, err := pgxpool.New(context.Background(), cfg.DBURL())
 	if err != nil {
@@ -48,8 +54,9 @@ func Build(cfg *config.Config) (*server.Server, func(), error) {
 	// Router
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
+	authMiddleware := middleware.AuthMiddleware(publicKey)
 
-	routes.Register(router, linkHandler, analyticsHandler)
+	routes.Register(router, linkHandler, analyticsHandler, authMiddleware)
 
 	// Server
 	srv := server.New(router, cfg.ServerPort)

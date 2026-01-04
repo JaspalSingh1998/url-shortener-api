@@ -6,15 +6,16 @@ import (
 )
 
 type Config struct {
-	AppEnv     string
-	ServerPort string
-	BaseURL    string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	RedisAddr  string
+	AppEnv           string
+	ServerPort       string
+	BaseURL          string
+	DBHost           string
+	DBPort           string
+	DBUser           string
+	DBPassword       string
+	DBName           string
+	RedisAddr        string
+	JWTPublicKeyPath string
 }
 
 func Load() *Config {
@@ -29,7 +30,8 @@ func Load() *Config {
 		DBPassword: getEnv("DB_PASSWORD", "postgres"),
 		DBName:     getEnv("DB_NAME", "shortener"),
 
-		RedisAddr: getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisAddr:        getEnv("REDIS_ADDR", "localhost:6379"),
+		JWTPublicKeyPath: getEnv("JWT_PUBLIC_KEY_PATH", "./keys/public.pem"),
 	}
 }
 
