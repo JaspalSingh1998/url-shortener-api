@@ -55,8 +55,9 @@ func Build(cfg *config.Config) (*server.Server, func(), error) {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	authMiddleware := middleware.AuthMiddleware(publicKey)
+	rateLimiter := middleware.NewRateLimiter(redisClient)
 
-	routes.Register(router, linkHandler, analyticsHandler, authMiddleware)
+	routes.Register(router, linkHandler, analyticsHandler, authMiddleware, rateLimiter)
 
 	// Server
 	srv := server.New(router, cfg.ServerPort)
