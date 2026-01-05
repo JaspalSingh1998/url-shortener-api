@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/JaspalSingh1998/url-shortener-api/internal/middleware"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/model"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/service"
 	"github.com/gin-gonic/gin"
@@ -38,8 +39,11 @@ func (h *LinkHandler) Create(c *gin.Context) {
 		return
 	}
 
+	orgID := middleware.GetOrgID(c)
+
 	link, err := h.service.CreateLink(
 		c.Request.Context(),
+		orgID,
 		req.OriginalURL,
 		req.CustomAlias,
 		req.ExpiresAt,

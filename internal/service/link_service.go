@@ -25,7 +25,7 @@ func NewLinkService(store *store.LinkStore, cache cache.LinkCache) *LinkService 
 	}
 }
 
-func (s *LinkService) CreateLink(ctx context.Context, originalUrl string, customAlias string, expiresAt *time.Time) (*model.Link, error) {
+func (s *LinkService) CreateLink(ctx context.Context, orgID int64, originalUrl string, customAlias string, expiresAt *time.Time) (*model.Link, error) {
 	if expiresAt != nil && expiresAt.Before(time.Now()) {
 		return nil, errors.New("expires_at must be in the future")
 	}
@@ -39,6 +39,7 @@ func (s *LinkService) CreateLink(ctx context.Context, originalUrl string, custom
 		ShortCode:   shortCode,
 		OriginalURL: originalUrl,
 		ExpiresAt:   expiresAt,
+		OrgID:       orgID,
 	}
 
 	if err := s.store.Create(ctx, link); err != nil {

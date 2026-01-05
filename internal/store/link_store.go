@@ -19,13 +19,13 @@ func NewLinkStore(db *pgxpool.Pool) *LinkStore {
 
 func (s *LinkStore) Create(ctx context.Context, link *model.Link) error {
 	query := `
-		INSERT INTO links (short_code, original_url, expires_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO links (short_code, original_url, expires_at, org_id)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, is_active, created_at, updated_at
 	`
 
 	return s.db.QueryRow(
-		ctx, query, link.ShortCode, link.OriginalURL, link.ExpiresAt,
+		ctx, query, link.ShortCode, link.OriginalURL, link.ExpiresAt, link.OrgID,
 	).Scan(
 		&link.ID,
 		&link.IsActive,

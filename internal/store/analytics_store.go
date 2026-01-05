@@ -25,17 +25,29 @@ func NewAnalyticsStore(db *pgxpool.Pool) *AnalyticsStore {
 	return &AnalyticsStore{db: db}
 }
 
-func (s *AnalyticsStore) GetDailyStats(ctx context.Context, linkID int64, from, to time.Time) ([]DailyStat, error) {
-	query := `
-		SELECT date, clicks
-		FROM link_click_stats_daily
-		WHERE link_id = $1
-		  AND date >= $2
-		  AND date <= $3
-		ORDER BY date
-	`
-	rows, err := s.db.Query(ctx, query, linkID, from, to)
+func (s *AnalyticsStore) GetDailyStats(
+	ctx context.Context,
+	linkID int64,
+	orgID int64,
+	from, to time.Time,
+) ([]DailyStat, error) {
 
+	query := `
+		SELECT d.date, d.clicks
+		FROM link_click_stats_daily d
+		WHERE d.link_id = $1
+		  AND d.date >= $2
+		  AND d.date <= $3
+		  AND EXISTS (
+			  SELECT 1
+			  FROM links l
+			  WHERE l.id = d.link_id
+			    AND l.org_id = $4
+		  )
+		ORDER BY d.date
+	`
+
+	rows, err := s.db.Query(ctx, query, linkID, from, to, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +68,26 @@ func (s *AnalyticsStore) GetDailyStats(ctx context.Context, linkID int64, from, 
 func (s *AnalyticsStore) GetHourlyStats(
 	ctx context.Context,
 	linkID int64,
+	orgID int64,
 	from, to time.Time,
 ) ([]HourlyStat, error) {
 
 	query := `
-		SELECT hour, clicks
-		FROM link_click_stats_hourly
-		WHERE link_id = $1
-		  AND hour >= $2
-		  AND hour <= $3
-		ORDER BY hour
+		SELECT h.hour, h.clicks
+		FROM link_click_stats_hourly h
+		WHERE h.link_id = $1
+		  AND h.hour >= $2
+		  AND h.hour <= $3
+		  AND EXISTS (
+			  SELECT 1
+			  FROM links l
+			  WHERE l.id = h.link_id
+			    AND l.org_id = $4
+		  )
+		ORDER BY h.hour
 	`
 
-	rows, err := s.db.Query(ctx, query, linkID, from, to)
+	rows, err := s.db.Query(ctx, query, linkID, from, to, orgID)
 	if err != nil {
 		return nil, err
 	}

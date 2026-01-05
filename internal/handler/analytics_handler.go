@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/JaspalSingh1998/url-shortener-api/internal/middleware"
 	"github.com/JaspalSingh1998/url-shortener-api/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +23,9 @@ func (h *AnalyticsHandler) Daily(c *gin.Context) {
 
 	from, _ := time.Parse("2006-01-02", c.Query("from"))
 	to, _ := time.Parse("2006-01-02", c.Query("to"))
+	orgID := middleware.GetOrgID(c)
 
-	stats, err := h.service.Daily(c.Request.Context(), linkID, from, to)
+	stats, err := h.service.Daily(c.Request.Context(), linkID, orgID, from, to)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -43,8 +45,9 @@ func (h *AnalyticsHandler) Hourly(c *gin.Context) {
 
 	from, _ := time.Parse(time.RFC3339, c.Query("from"))
 	to, _ := time.Parse(time.RFC3339, c.Query("to"))
+	orgID := middleware.GetOrgID(c)
 
-	stats, err := h.service.Hourly(c.Request.Context(), linkID, from, to)
+	stats, err := h.service.Hourly(c.Request.Context(), linkID, orgID, from, to)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -4,6 +4,7 @@ import "time"
 
 type Link struct {
 	ID          int64      `json:"id"`
+	OrgID       int64      `json:"org_id,omitempty"`
 	ShortCode   string     `json:"short_code"`
 	OriginalURL string     `json:"original_url"`
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
